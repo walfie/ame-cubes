@@ -16,9 +16,17 @@ module.exports = (env, options) => {
     plugins: [
       new CleanWebpackPlugin(),
       new HtmlWebpackPlugin({
-        title: "Ame Cubes",
+        template: "./src/index.html",
       }),
     ],
+    module: {
+      rules: [
+        {
+          test: /\.png$/,
+          type: "asset/resource",
+        },
+      ],
+    },
     devServer: {
       overlay: true,
       hot: true,
