@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import * as dat from "dat.gui";
 import spritesheet from "../assets/ame-spritesheet.png";
 
 const spriteData = {
@@ -88,6 +89,25 @@ class AnimatedSprite {
 
 const sprite = new AnimatedSprite(spriteData);
 scene.add(sprite.sprite);
+
+const gui = new dat.GUI();
+const params = {
+  rotationRate: sprite.rotationRate,
+  spriteFps: spriteData.fps,
+};
+gui
+  .add(params, "rotationRate", -1, 1)
+  .name("Rotation rate")
+  .onChange(() => {
+    sprite.setRotationRate(params.rotationRate);
+  });
+
+gui
+  .add(params, "spriteFps", 1, 60)
+  .name("Sprite FPS")
+  .onChange(() => {
+    sprite.setFrameRate(params.spriteFps);
+  });
 
 let state = {};
 
