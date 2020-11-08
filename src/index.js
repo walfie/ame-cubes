@@ -149,26 +149,31 @@ class Cube {
     const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
 
     this.mesh = new THREE.Mesh(geometry, material);
-    this.velocity = { x: 0, y: 0, z: 0 };
-    this.rotationRate = { x: 0, y: 0, z: 0 };
+    this.baseVelocity = new THREE.Vector3(0, 0, 0);
+    this.baseRotationRate = new THREE.Vector3(0, 0, 0);
+    this.velocity = new THREE.Vector3(0, 0, 0);
+    this.rotationRate = new THREE.Vector3(0, 0, 0);
     this.randomizeMax = 2000;
     this.updateMax = 5000;
     this.randomize();
   }
 
+  scaleVelocity(scale) {
+    this.velocity = this.baseVelocity.clone().multiplyScalar(scale);
+    this.velocity.z = this.baseVelocity.z;
+  }
+
+  scaleRotationRate(scale) {
+    this.rotationRate = this.baseRotationRate.clone().multiplyScalar(scale);
+  }
+
   randomize() {
-    this.rotationRate = {
-      x: Math.random() - 0.5,
-      y: Math.random() - 0.5,
-      z: Math.random() - 0.5,
-    };
+    this.baseRotationRate.random().subScalar(0.5);
 
     const texture = randomCubeTexture();
     this.mesh.material = texture || defaultCubeTexture.texture;
     const scale = texture ? 1 + Math.random() * 3 : 0;
-    this.mesh.scale.x = scale;
-    this.mesh.scale.y = scale;
-    this.mesh.scale.z = scale;
+    this.mesh.scale.setScalar(scale);
 
     const [edgeAxis, otherAxis] = choice(["x", "y"], ["y", "x"]);
 
@@ -181,9 +186,12 @@ class Cube {
       (Math.random() - 0.5) * 2 * this.randomizeMax;
     this.mesh.position.z = -Math.random() * 1000;
 
-    this.velocity.z = Math.random() - 0.5;
-    this.velocity[edgeAxis] = Math.random() * (isMinEdge ? 0.5 : -0.5);
-    this.velocity[otherAxis] = Math.random() - 0.5;
+    this.baseVelocity.z = Math.random() - 0.5;
+    this.baseVelocity[edgeAxis] = Math.random() * (isMinEdge ? 0.5 : -0.5);
+    this.baseVelocity[otherAxis] = Math.random() - 0.5;
+
+    this.scaleVelocity(params.cubeSpeed);
+    this.scaleRotationRate(params.cubeRotationSpeed);
   }
 
   update() {
@@ -191,13 +199,11 @@ class Cube {
       return;
     }
 
-    this.mesh.rotation.x += this.rotationRate.x * params.cubeRotationSpeed;
-    this.mesh.rotation.y += this.rotationRate.y * params.cubeRotationSpeed;
-    this.mesh.rotation.z += this.rotationRate.z * params.cubeRotationSpeed;
+    this.mesh.rotation.x += this.rotationRate.x;
+    this.mesh.rotation.y += this.rotationRate.y;
+    this.mesh.rotation.z += this.rotationRate.z;
 
-    this.mesh.position.x += this.velocity.x * params.cubeSpeed;
-    this.mesh.position.y += this.velocity.y * params.cubeSpeed;
-    this.mesh.position.z += this.velocity.z;
+    this.mesh.position.add(this.velocity);
 
     const pos = this.mesh.position;
     if (
@@ -312,9 +318,19 @@ cubeControls
     });
   });
 
-cubeControls.add(params, "cubeSpeed", 0.0, 250.0).name("Speed");
+cubeControls
+  .add(params, "cubeSpeed", 0.0, 250.0)
+  .name("Speed")
+  .onChange(() => {
+    cubes.forEach((cube) => cube.scaleVelocity(params.cubeSpeed));
+  });
 
-cubeControls.add(params, "cubeRotationSpeed", 0.0, 1.0).name("Rotation speed");
+cubeControls
+  .add(params, "cubeRotationSpeed", 0.0, 1.0)
+  .name("Rotation speed")
+  .onChange(() => {
+    cubes.forEach((cube) => cube.scaleRotationRate(params.cubeRotationSpeed));
+  });
 
 cubeControls.add({ reset: resetCubes }, "reset").name("Reset");
 
