@@ -341,6 +341,7 @@ textureControls
     {
       enableAll: () => {
         cubeControllers.forEach((c) => c.setValue(true));
+        resetCubes();
       },
     },
     "enableAll"
