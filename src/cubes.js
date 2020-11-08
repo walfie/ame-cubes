@@ -24,11 +24,17 @@ const load = (name, base, opts) => {
   return { name, texture };
 };
 
-const cubeTextures = [
-  load("grass", require("../assets/blocks/grass_side.png"), {
+const defaultCubeTexture = load(
+  "grass",
+  require("../assets/blocks/grass_side.png"),
+  {
     top: require("../assets/blocks/grass_top.png"),
     bottom: require("../assets/blocks/dirt.png"),
-  }),
+  }
+);
+
+const cubeTextures = [
+  defaultCubeTexture,
   load("snow", require("../assets/blocks/grass_side_snowed.png"), {
     top: require("../assets/blocks/snow.png"),
     bottom: require("../assets/blocks/dirt.png"),
@@ -99,4 +105,4 @@ const cubeTextures = [
   load("stone brick", require("../assets/blocks/stonebrick.png")),
 ].sort((a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1));
 
-export { cubeTextures };
+export { cubeTextures, defaultCubeTexture };

@@ -4,7 +4,7 @@
 import * as THREE from "three";
 import * as dat from "dat.gui";
 import spritesheet from "../assets/ame-spritesheet.png";
-import { cubeTextures } from "./cubes";
+import { cubeTextures, defaultCubeTexture } from "./cubes";
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
@@ -39,6 +39,8 @@ const params = {
   cubeCount: defaultCubeCount,
   ameVisible: true,
   cubeToggle: {},
+  cubeSpeed: 50.0,
+  cubeRotationSpeed: 0.1,
 };
 
 let enabledCubes = [...cubeTextures];
@@ -149,40 +151,39 @@ class Cube {
     this.mesh = new THREE.Mesh(geometry, material);
     this.velocity = { x: 0, y: 0, z: 0 };
     this.rotationRate = { x: 0, y: 0, z: 0 };
+    this.randomizeMax = 2000;
+    this.updateMax = 5000;
     this.randomize();
   }
 
   randomize() {
-    const texture = randomCubeTexture();
-
-    if (!texture) {
-      return;
-    }
-
     this.rotationRate = {
-      x: (Math.random() - 0.5) * 0.1,
-      y: (Math.random() - 0.5) * 0.1,
-      z: (Math.random() - 0.5) * 0.1,
+      x: Math.random() - 0.5,
+      y: Math.random() - 0.5,
+      z: Math.random() - 0.5,
     };
 
-    const scale = 1 + Math.random() * 3;
+    const texture = randomCubeTexture();
+    this.mesh.material = texture || defaultCubeTexture.texture;
+    const scale = texture ? 1 + Math.random() * 3 : 0;
     this.mesh.scale.x = scale;
     this.mesh.scale.y = scale;
     this.mesh.scale.z = scale;
-    this.mesh.material = texture;
 
-    const max = 2000;
     const [edgeAxis, otherAxis] = choice(["x", "y"], ["y", "x"]);
 
     const isMinEdge = choice(true, false);
 
-    this.mesh.position[edgeAxis] = isMinEdge ? -max : max;
-    this.mesh.position[otherAxis] = (Math.random() - 0.5) * 2 * max;
+    this.mesh.position[edgeAxis] = isMinEdge
+      ? -this.randomizeMax
+      : this.randomizeMax;
+    this.mesh.position[otherAxis] =
+      (Math.random() - 0.5) * 2 * this.randomizeMax;
     this.mesh.position.z = -Math.random() * 1000;
 
     this.velocity.z = Math.random() - 0.5;
-    this.velocity[edgeAxis] = Math.random() * 25 * (isMinEdge ? 1 : -1);
-    this.velocity[otherAxis] = (Math.random() - 0.5) * 50;
+    this.velocity[edgeAxis] = Math.random() * (isMinEdge ? 0.5 : -0.5);
+    this.velocity[otherAxis] = Math.random() - 0.5;
   }
 
   update() {
@@ -190,23 +191,22 @@ class Cube {
       return;
     }
 
-    this.mesh.rotation.x += this.rotationRate.x;
-    this.mesh.rotation.y += this.rotationRate.y;
-    this.mesh.rotation.z += this.rotationRate.z;
+    this.mesh.rotation.x += this.rotationRate.x * params.cubeRotationSpeed;
+    this.mesh.rotation.y += this.rotationRate.y * params.cubeRotationSpeed;
+    this.mesh.rotation.z += this.rotationRate.z * params.cubeRotationSpeed;
 
-    this.mesh.position.x += this.velocity.x;
-    this.mesh.position.y += this.velocity.y;
+    this.mesh.position.x += this.velocity.x * params.cubeSpeed;
+    this.mesh.position.y += this.velocity.y * params.cubeSpeed;
     this.mesh.position.z += this.velocity.z;
 
     const pos = this.mesh.position;
-    const max = 5000;
     if (
-      pos.x < -max ||
-      pos.x > max ||
-      pos.y < -max ||
-      pos.x > max ||
-      pos.z < -max ||
-      pos.z > max
+      pos.x < -this.updateMax ||
+      pos.x > this.updateMax ||
+      pos.y < -this.updateMax ||
+      pos.x > this.updateMax ||
+      pos.z < -this.updateMax ||
+      pos.z > this.updateMax
     ) {
       this.randomize();
     }
@@ -214,6 +214,11 @@ class Cube {
 }
 
 let cubes = [];
+
+const resetCubes = () => {
+  cubes.forEach((cube) => cube.randomize());
+};
+
 const addCube = (visible) => {
   const cube = new Cube();
   cube.mesh.visible = visible;
@@ -232,31 +237,17 @@ scene.add(ambientLight);
 
 const gui = new dat.GUI();
 gui.close();
-const sceneControls = gui.addFolder("Scene");
-sceneControls.open();
-sceneControls
-  .addColor(params, "backgroundColor")
-  .name("Background")
-  .onChange(() => {
-    renderer.setClearColor(params.backgroundColor);
-  });
-sceneControls
-  .add(params, "cubeCount", 0, maxCubeCount)
-  .name("Cubes")
-  .onChange(() => {
-    while (cubes.length < params.cubeCount) {
-      addCube(false);
-    }
-
-    cubes.forEach((cube, index) => {
-      cube.mesh.visible = index < params.cubeCount;
-    });
-  });
 
 renderer.setClearColor(params.backgroundColor, 1);
 
 const lightControls = gui.addFolder("Lighting");
 lightControls.open();
+lightControls
+  .addColor(params, "backgroundColor")
+  .name("Background")
+  .onChange(() => {
+    renderer.setClearColor(params.backgroundColor);
+  });
 lightControls
   .addColor(params, "lightColor")
   .name("Point lighting")
@@ -306,9 +297,30 @@ ameControls
     sprite.mesh.visible = params.ameVisible;
   });
 
-const cubeControls = gui.addFolder("Textures");
-let cubeControllers;
+const cubeControls = gui.addFolder("Cubes");
+cubeControls.open();
 cubeControls
+  .add(params, "cubeCount", 0, maxCubeCount)
+  .name("Count")
+  .onChange(() => {
+    while (cubes.length < params.cubeCount) {
+      addCube(false);
+    }
+
+    cubes.forEach((cube, index) => {
+      cube.mesh.visible = index < params.cubeCount;
+    });
+  });
+
+cubeControls.add(params, "cubeSpeed", 0.0, 250.0).name("Speed");
+
+cubeControls.add(params, "cubeRotationSpeed", 0.0, 1.0).name("Rotation speed");
+
+cubeControls.add({ reset: resetCubes }, "reset").name("Reset");
+
+const textureControls = cubeControls.addFolder("Textures");
+let cubeControllers;
+textureControls
   .add(
     {
       enableAll: () => {
@@ -319,7 +331,7 @@ cubeControls
   )
   .name("Enable all");
 
-cubeControls
+textureControls
   .add(
     {
       disableAll: () => {
@@ -331,7 +343,7 @@ cubeControls
   .name("Disable all");
 
 cubeControllers = cubeTextures.map(({ name, texture }) => {
-  return cubeControls
+  return textureControls
     .add(params.cubeToggle, name)
     .name(name)
     .onChange(() => {
