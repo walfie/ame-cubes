@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import * as dat from "dat.gui";
 import spritesheet from "../assets/ame-spritesheet.png";
+import { randomCubeTexture } from "./cubes";
 
 const spriteData = {
   width: 650,
@@ -98,10 +99,11 @@ let choice = (a, b) => {
 class Cube {
   constructor() {
     const geometry = new THREE.BoxBufferGeometry(100, 100, 100);
-    const material = new THREE.MeshStandardMaterial({ color: 0xff00ff });
+    const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
 
     this.mesh = new THREE.Mesh(geometry, material);
     this.velocity = { x: 0, y: 0, z: 0 };
+    this.rotationRate = { x: 0, y: 0, z: 0 };
     this.randomize();
   }
 
@@ -116,7 +118,7 @@ class Cube {
     this.mesh.scale.x = scale;
     this.mesh.scale.y = scale;
     this.mesh.scale.z = scale;
-    this.mesh.material.color.set(Math.random() * 16777215); // TODO
+    this.mesh.material = randomCubeTexture();
 
     const max = 3000;
     const [edgeAxis, otherAxis] = choice(["x", "y"], ["y", "x"]);
