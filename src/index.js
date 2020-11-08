@@ -3,6 +3,8 @@ import * as dat from "dat.gui";
 import spritesheet from "../assets/ame-spritesheet.png";
 import { randomCubeTexture } from "./cubes";
 
+const defaultCubeCount = 100;
+const maxCubeCount = 2048;
 const spriteData = {
   width: 650,
   height: 900,
@@ -135,6 +137,10 @@ class Cube {
   }
 
   update() {
+    if (!this.mesh.visible) {
+      return;
+    }
+
     this.mesh.rotation.x += this.rotationRate.x;
     this.mesh.rotation.y += this.rotationRate.y;
     this.mesh.rotation.z += this.rotationRate.z;
@@ -158,11 +164,15 @@ class Cube {
   }
 }
 
-const cubes = [...Array(100)].map((_) => {
+let cubes = [];
+const addCube = (visible) => {
   const cube = new Cube();
+  cube.mesh.visible = visible;
   scene.add(cube.mesh);
-  return cube;
-});
+  cubes.push(cube);
+};
+
+[...Array(defaultCubeCount)].forEach((_) => addCube(true));
 
 const params = {
   rotationRate: sprite.rotationRate,
@@ -170,6 +180,7 @@ const params = {
   backgroundColor: "#ffffff",
   lightColor: "#ffffff",
   lightIntensity: 1.0,
+  cubeCount: defaultCubeCount,
 };
 
 const light = new THREE.PointLight(params.lightColor, 1.0, 0);
@@ -196,6 +207,24 @@ sceneControls
   .name("Light Intensity")
   .onChange(() => {
     light.intensity = params.lightIntensity;
+  });
+sceneControls
+  .add(params, "lightIntensity", 0.0, 5.0)
+  .name("Light Intensity")
+  .onChange(() => {
+    light.intensity = params.lightIntensity;
+  });
+sceneControls
+  .add(params, "cubeCount", 0, maxCubeCount)
+  .name("Cubes")
+  .onChange(() => {
+    while (cubes.length < params.cubeCount) {
+      addCube(false);
+    }
+
+    cubes.forEach((cube, index) => {
+      cube.mesh.visible = index < params.cubeCount;
+    });
   });
 
 const ameControls = gui.addFolder("Ame");
