@@ -28,7 +28,6 @@ const clock = new THREE.Clock();
 const renderer = new THREE.WebGLRenderer();
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0xffffff, 1);
 renderer.autoClear = false;
 
 const onWindowResize = () => {
@@ -53,11 +52,14 @@ class AnimatedSprite {
     this.setRotationRate(rotationRate);
 
     this.texture = new THREE.TextureLoader().load(spriteData.image);
-    this.material = new THREE.SpriteMaterial({
+    this.material = new THREE.MeshStandardMaterial({
       map: this.texture,
-      color: 0xffffff,
+      side: THREE.DoubleSide,
+      transparent: true,
     });
-    this.sprite = new THREE.Sprite(this.material);
+
+    this.geometry = new THREE.PlaneGeometry(1, 1);
+    this.sprite = new THREE.Mesh(this.geometry, this.material);
     this.setScale(1.0);
 
     this.texture.wrapS = this.texture.wrapT = THREE.RepeatWrapping;
@@ -80,7 +82,7 @@ class AnimatedSprite {
   }
 
   update(delta) {
-    this.material.rotation += this.rotationRate;
+    this.sprite.rotation.z += this.rotationRate;
     this.elapsed += delta;
 
     while (this.elapsed > this.frameDelay) {
@@ -177,7 +179,7 @@ const addCube = (visible) => {
 const params = {
   rotationRate: sprite.rotationRate,
   spriteFps: spriteData.fps,
-  backgroundColor: "#ffffff",
+  backgroundColor: "#000000",
   lightColor: "#ffffff",
   lightIntensity: 1.0,
   cubeCount: defaultCubeCount,
@@ -196,17 +198,12 @@ sceneControls
   .onChange(() => {
     renderer.setClearColor(params.backgroundColor);
   });
+renderer.setClearColor(params.backgroundColor, 1);
 sceneControls
   .addColor(params, "lightColor")
   .name("Lighting")
   .onChange(() => {
     light.color.set(params.lightColor);
-  });
-sceneControls
-  .add(params, "lightIntensity", 0.0, 5.0)
-  .name("Light Intensity")
-  .onChange(() => {
-    light.intensity = params.lightIntensity;
   });
 sceneControls
   .add(params, "lightIntensity", 0.0, 5.0)
