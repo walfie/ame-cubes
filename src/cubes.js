@@ -81,10 +81,7 @@ const cubeTextures = [
   load("coal ore", require("../assets/blocks/coal_ore.png")),
   load("coarse dirt", require("../assets/blocks/coarse_dirt.png")),
   load("cobblestone", require("../assets/blocks/cobblestone.png")),
-  load(
-    "cobblestone (mossy)",
-    require("../assets/blocks/cobblestone_mossy.png")
-  ),
+  load("mossy cobblestone", require("../assets/blocks/cobblestone_mossy.png")),
   load("diamond ore", require("../assets/blocks/diamond_ore.png")),
   load("dirt", require("../assets/blocks/dirt.png")),
   load("gold block", require("../assets/blocks/gold_block.png")),

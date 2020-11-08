@@ -347,7 +347,12 @@ cubeControllers = cubeTextures.map(({ name, texture }) => {
     .add(params.cubeToggle, name)
     .name(name)
     .onChange(() => {
+      const previousCount = enabledCubes.length;
       enabledCubes = cubeTextures.filter(({ name }) => params.cubeToggle[name]);
+
+      if (enabledCubes.length === 0 || previousCount === 0) {
+        resetCubes();
+      }
     });
 });
 
