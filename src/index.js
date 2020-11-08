@@ -330,10 +330,8 @@ cubeControls
   )
   .name("Disable all");
 
-const blocksControls = cubeControls.addFolder("Blocks");
-blocksControls.open();
 cubeControllers = cubeTextures.map(({ name, texture }) => {
-  return blocksControls
+  return cubeControls
     .add(params.cubeToggle, name)
     .name(name)
     .onChange(() => {
