@@ -4,7 +4,7 @@
 import * as THREE from "three";
 import * as dat from "dat.gui";
 import spritesheet from "../assets/ame-spritesheet.png";
-import { randomCubeTexture } from "./cubes";
+import { cubeTextures } from "./cubes";
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
@@ -26,6 +26,33 @@ const spriteData = {
   frameCount: 8,
   fps: 12,
   rotationRate: 0.05,
+};
+
+const params = {
+  rotationRate: spriteData.rotationRate,
+  spriteFps: spriteData.fps,
+  backgroundColor: "#000000",
+  lightColor: "#ffffff",
+  lightIntensity: 1.0,
+  ambientLightColor: "#001fff",
+  ambientLightIntensity: 1.0,
+  cubeCount: defaultCubeCount,
+  ameVisible: true,
+  cubeToggle: {},
+};
+
+let enabledCubes = [...cubeTextures];
+cubeTextures.forEach(({ name }) => {
+  params.cubeToggle[name] = true;
+});
+
+const randomCubeTexture = () => {
+  if (enabledCubes.length === 0) {
+    return null;
+  } else {
+    return enabledCubes[Math.floor(Math.random() * enabledCubes.length)]
+      .texture;
+  }
 };
 
 const scene = new THREE.Scene();
@@ -110,7 +137,7 @@ class AnimatedSprite {
 const sprite = new AnimatedSprite(spriteData);
 scene.add(sprite.mesh);
 
-let choice = (a, b) => {
+const choice = (a, b) => {
   return Math.random() > 0.5 ? a : b;
 };
 
@@ -126,6 +153,12 @@ class Cube {
   }
 
   randomize() {
+    const texture = randomCubeTexture();
+
+    if (!texture) {
+      return;
+    }
+
     this.rotationRate = {
       x: (Math.random() - 0.5) * 0.1,
       y: (Math.random() - 0.5) * 0.1,
@@ -136,7 +169,7 @@ class Cube {
     this.mesh.scale.x = scale;
     this.mesh.scale.y = scale;
     this.mesh.scale.z = scale;
-    this.mesh.material = randomCubeTexture();
+    this.mesh.material = texture;
 
     const max = 2000;
     const [edgeAxis, otherAxis] = choice(["x", "y"], ["y", "x"]);
@@ -189,18 +222,6 @@ const addCube = (visible) => {
 };
 
 [...Array(defaultCubeCount)].forEach((_) => addCube(true));
-
-const params = {
-  rotationRate: sprite.rotationRate,
-  spriteFps: spriteData.fps,
-  backgroundColor: "#000000",
-  lightColor: "#ffffff",
-  lightIntensity: 1.0,
-  ambientLightColor: "#001fff",
-  ambientLightIntensity: 1.0,
-  cubeCount: defaultCubeCount,
-  ameVisible: true,
-};
 
 const light = new THREE.PointLight(params.lightColor, 1.0, 0);
 light.position.z = camera.position.z;
@@ -284,6 +305,41 @@ ameControls
   .onChange(() => {
     sprite.mesh.visible = params.ameVisible;
   });
+
+const cubeControls = gui.addFolder("Textures");
+let cubeControllers;
+cubeControls
+  .add(
+    {
+      enableAll: () => {
+        cubeControllers.forEach((c) => c.setValue(true));
+      },
+    },
+    "enableAll"
+  )
+  .name("Enable all");
+
+cubeControls
+  .add(
+    {
+      disableAll: () => {
+        cubeControllers.forEach((c) => c.setValue(false));
+      },
+    },
+    "disableAll"
+  )
+  .name("Disable all");
+
+const blocksControls = cubeControls.addFolder("Blocks");
+blocksControls.open();
+cubeControllers = cubeTextures.map(({ name, texture }) => {
+  return blocksControls
+    .add(params.cubeToggle, name)
+    .name(name)
+    .onChange(() => {
+      enabledCubes = cubeTextures.filter(({ name }) => params.cubeToggle[name]);
+    });
+});
 
 const animate = () => {
   requestAnimationFrame(animate);
