@@ -12,7 +12,7 @@ module.exports = (env, options) => {
     output: {
       path: path.resolve(__dirname, "dist"),
       filename: isProd ? "[name].[contenthash:8].js" : "[name].js",
-      publicPath: "/",
+      publicPath: "./",
     },
     plugins: [
       new CleanWebpackPlugin(),
