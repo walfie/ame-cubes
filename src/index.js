@@ -59,7 +59,7 @@ class AnimatedSprite {
     });
 
     this.geometry = new THREE.PlaneGeometry(1, 1);
-    this.sprite = new THREE.Mesh(this.geometry, this.material);
+    this.mesh = new THREE.Mesh(this.geometry, this.material);
     this.setScale(1.0);
 
     this.texture.wrapS = this.texture.wrapT = THREE.RepeatWrapping;
@@ -78,11 +78,11 @@ class AnimatedSprite {
   }
 
   setScale(factor) {
-    this.sprite.scale.set(this.width * factor, this.height * factor, 100);
+    this.mesh.scale.set(this.width * factor, this.height * factor, 100);
   }
 
   update(delta) {
-    this.sprite.rotation.z += this.rotationRate;
+    this.mesh.rotation.z += this.rotationRate;
     this.elapsed += delta;
 
     while (this.elapsed > this.frameDelay) {
@@ -94,7 +94,7 @@ class AnimatedSprite {
 }
 
 const sprite = new AnimatedSprite(spriteData);
-scene.add(sprite.sprite);
+scene.add(sprite.mesh);
 
 let choice = (a, b) => {
   return Math.random() > 0.5 ? a : b;
@@ -182,12 +182,18 @@ const params = {
   backgroundColor: "#000000",
   lightColor: "#ffffff",
   lightIntensity: 1.0,
+  ambientLightColor: "#ffffff",
+  ambientLightIntensity: 1.0,
   cubeCount: defaultCubeCount,
+  ameVisible: true,
 };
 
 const light = new THREE.PointLight(params.lightColor, 1.0, 0);
 light.position.z = camera.position.z;
 scene.add(light);
+
+const ambientLight = new THREE.PointLight(params.ambientLightColor, 1.0, 0);
+scene.add(ambientLight);
 
 const gui = new dat.GUI();
 const sceneControls = gui.addFolder("Scene");
@@ -197,19 +203,6 @@ sceneControls
   .name("Background")
   .onChange(() => {
     renderer.setClearColor(params.backgroundColor);
-  });
-renderer.setClearColor(params.backgroundColor, 1);
-sceneControls
-  .addColor(params, "lightColor")
-  .name("Lighting")
-  .onChange(() => {
-    light.color.set(params.lightColor);
-  });
-sceneControls
-  .add(params, "lightIntensity", 0.0, 5.0)
-  .name("Light Intensity")
-  .onChange(() => {
-    light.intensity = params.lightIntensity;
   });
 sceneControls
   .add(params, "cubeCount", 0, maxCubeCount)
@@ -222,6 +215,35 @@ sceneControls
     cubes.forEach((cube, index) => {
       cube.mesh.visible = index < params.cubeCount;
     });
+  });
+
+renderer.setClearColor(params.backgroundColor, 1);
+
+const lightControls = gui.addFolder("Lighting");
+lightControls.open();
+lightControls
+  .addColor(params, "lightColor")
+  .name("Point lighting")
+  .onChange(() => {
+    light.color.set(params.lightColor);
+  });
+lightControls
+  .add(params, "lightIntensity", 0.0, 5.0)
+  .name("Light intensity")
+  .onChange(() => {
+    light.intensity = params.lightIntensity;
+  });
+lightControls
+  .addColor(params, "ambientLightColor")
+  .name("Ambient lighting")
+  .onChange(() => {
+    light.color.set(params.ambientLightColor);
+  });
+lightControls
+  .add(params, "ambientLightIntensity", 0.0, 5.0)
+  .name("Ambient light intensity")
+  .onChange(() => {
+    light.intensity = params.ambientLightIntensity;
   });
 
 const ameControls = gui.addFolder("Ame");
@@ -239,6 +261,13 @@ ameControls
   .name("Sprite FPS")
   .onChange(() => {
     sprite.setFrameRate(params.spriteFps);
+  });
+
+ameControls
+  .add(params, "ameVisible")
+  .name("Visible")
+  .onChange(() => {
+    sprite.mesh.visible = params.ameVisible;
   });
 
 let state = {};
