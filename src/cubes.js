@@ -1,17 +1,21 @@
 import * as THREE from "three";
 const loader = new THREE.TextureLoader();
 
-const loadOne = (path) => {
+const loadOne = (path, transparent) => {
   const texture = loader.load(path);
   texture.magFilter = THREE.NearestFilter;
   texture.minFilter = THREE.LinearMipMapLinearFilter;
-  return new THREE.MeshStandardMaterial({ map: texture });
+  return new THREE.MeshStandardMaterial({
+    map: texture,
+    transparent,
+    side: transparent ? THREE.DoubleSide : THREE.FrontSide,
+  });
 };
 
 const load = (name, base, opts) => {
   const texture =
     opts === undefined
-      ? loadOne(base)
+      ? loadOne(base, false)
       : [
           opts.front || base,
           opts.back || base,
@@ -19,9 +23,9 @@ const load = (name, base, opts) => {
           opts.bottom || base,
           opts.leftSide || base,
           opts.rightSide || base,
-        ].map(loadOne);
+        ].map((path) => loadOne(path, opts.transparent || false));
 
-  return { name, texture };
+  return { name, texture, isFlat: (opts || {}).flat || false };
 };
 
 const defaultCubeTexture = load(
@@ -100,6 +104,19 @@ const cubeTextures = [
   load("sand", require("../assets/blocks/sand.png")),
   load("stone", require("../assets/blocks/stone.png")),
   load("stone brick", require("../assets/blocks/stonebrick.png")),
+  load("glass", require("../assets/blocks/glass.png"), { transparent: true }),
+  load("rail", require("../assets/blocks/rail_normal.png"), {
+    transparent: true,
+    flat: true,
+  }),
+  load("rail (powered)", require("../assets/blocks/rail_golden.png"), {
+    transparent: true,
+    flat: true,
+  }),
+  load("ladder", require("../assets/blocks/ladder.png"), {
+    transparent: true,
+    flat: true,
+  }),
 ].sort((a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1));
 
 export { cubeTextures, defaultCubeTexture };

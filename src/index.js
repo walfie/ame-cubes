@@ -17,6 +17,7 @@ if ("serviceWorker" in navigator) {
     });
 }
 
+const cubeSize = 100;
 const defaultCubeCount = 150;
 const maxCubeCount = 2048;
 const spriteData = {
@@ -54,8 +55,7 @@ const randomCubeTexture = () => {
   if (enabledCubes.length === 0) {
     return null;
   } else {
-    return enabledCubes[Math.floor(Math.random() * enabledCubes.length)]
-      .texture;
+    return enabledCubes[Math.floor(Math.random() * enabledCubes.length)];
   }
 };
 
@@ -145,12 +145,13 @@ const choice = (a, b) => {
   return Math.random() > 0.5 ? a : b;
 };
 
+const cubeGeometry = new THREE.BoxBufferGeometry(cubeSize, cubeSize, cubeSize);
+const planeGeometry = new THREE.PlaneGeometry(cubeSize, cubeSize);
 class Cube {
   constructor() {
-    const geometry = new THREE.BoxBufferGeometry(100, 100, 100);
     const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
 
-    this.mesh = new THREE.Mesh(geometry, material);
+    this.mesh = new THREE.Mesh(cubeGeometry, material);
     this.baseVelocity = new THREE.Vector3(0, 0, 0);
     this.baseRotationRate = new THREE.Vector3(0, 0, 0);
     this.velocity = new THREE.Vector3(0, 0, 0);
@@ -172,10 +173,15 @@ class Cube {
   randomize() {
     this.baseRotationRate.random().subScalar(0.5);
 
-    const texture = randomCubeTexture();
-    this.mesh.material = texture || defaultCubeTexture.texture;
-    const scale = texture ? 1 + Math.random() * 3 : 0;
-    this.mesh.scale.setScalar(scale);
+    const cubeTexture = randomCubeTexture();
+    if (cubeTexture) {
+      this.mesh.geometry = cubeTexture.isFlat ? planeGeometry : cubeGeometry;
+      this.mesh.material = cubeTexture.texture;
+      this.mesh.scale.setScalar(1 + Math.random() * 3);
+    } else {
+      this.mesh.material = defaultCubeTexture.texture;
+      this.mesh.scale.setScalar(0);
+    }
 
     const [edgeAxis, otherAxis] = choice(["x", "y"], ["y", "x"]);
 
