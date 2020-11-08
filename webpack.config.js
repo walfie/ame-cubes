@@ -33,6 +33,11 @@ module.exports = (env, options) => {
       hot: true,
       stats: "errors-only",
     },
+    optimization: {
+      splitChunks: {
+        chunks: "all",
+      },
+    },
   };
 
   if (isProd) {
