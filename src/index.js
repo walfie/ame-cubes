@@ -1,3 +1,6 @@
+// Disclaimer: This code is not well-written and there are magic literals used
+// all over the place. It could use a lot of cleanup.
+
 import * as THREE from "three";
 import * as dat from "dat.gui";
 import spritesheet from "../assets/ame-spritesheet.png";
