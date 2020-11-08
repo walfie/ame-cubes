@@ -1,6 +1,7 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const { GenerateSW } = require("workbox-webpack-plugin");
 
 module.exports = (env, options) => {
   const isProd = options.mode === "production";
@@ -33,6 +34,23 @@ module.exports = (env, options) => {
       stats: "errors-only",
     },
   };
+
+  if (isProd) {
+    webpackConfig.plugins.push(
+      new GenerateSW({
+        swDest: "sw.js",
+        skipWaiting: true,
+        clientsClaim: true,
+        include: [/\.(html|css|js|png|webmanifest)$/],
+        runtimeCaching: [
+          {
+            urlPattern: /\/.+\.[0-9a-f]+\.[a-z]+$/i,
+            handler: "CacheFirst",
+          },
+        ],
+      })
+    );
+  }
 
   return webpackConfig;
 };

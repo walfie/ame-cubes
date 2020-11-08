@@ -3,6 +3,17 @@ import * as dat from "dat.gui";
 import spritesheet from "../assets/ame-spritesheet.png";
 import { randomCubeTexture } from "./cubes";
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("sw.js")
+    .then(({ scope }) => {
+      console.log("Registration successful, scope is:", scope);
+    })
+    .catch((error) => {
+      console.error("Service worker registration failed, error:", error);
+    });
+}
+
 const defaultCubeCount = 150;
 const maxCubeCount = 2048;
 const spriteData = {

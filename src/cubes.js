@@ -2,11 +2,11 @@ import * as THREE from "three";
 
 const loader = new THREE.TextureLoader();
 
-const loadOne = (path, transparent) => {
+const loadOne = (path) => {
   const texture = loader.load(path);
   texture.magFilter = THREE.NearestFilter;
   texture.minFilter = THREE.LinearMipMapLinearFilter;
-  return new THREE.MeshStandardMaterial({ map: texture, transparent });
+  return new THREE.MeshStandardMaterial({ map: texture });
 };
 
 const load = (base, opts) => {
