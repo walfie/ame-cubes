@@ -41,6 +41,8 @@ const params = {
   cubeToggle: {},
   cubeSpeed: 50.0,
   cubeRotationSpeed: 0.1,
+  fov: 75,
+  cameraDistance: 1000,
 };
 
 let enabledCubes = [...cubeTextures];
@@ -59,12 +61,12 @@ const randomCubeTexture = () => {
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
-  75, // FOV
+  params.fov, // FOV
   window.innerWidth / window.innerHeight,
   0.1, // near
   3000 // far
 );
-camera.position.z = 1000;
+camera.position.z = params.cameraDistance;
 
 const clock = new THREE.Clock();
 
@@ -246,37 +248,53 @@ gui.close();
 
 renderer.setClearColor(params.backgroundColor, 1);
 
-const lightControls = gui.addFolder("Lighting");
-lightControls.open();
-lightControls
+const sceneControls = gui.addFolder("Scene");
+sceneControls.open();
+sceneControls
   .addColor(params, "backgroundColor")
   .name("Background")
   .onChange(() => {
     renderer.setClearColor(params.backgroundColor);
   });
-lightControls
+sceneControls
   .addColor(params, "lightColor")
   .name("Point lighting")
   .onChange(() => {
     light.color.set(params.lightColor);
   });
-lightControls
+sceneControls
   .add(params, "lightIntensity", 0.0, 5.0)
   .name("Light intensity")
   .onChange(() => {
     light.intensity = params.lightIntensity;
   });
-lightControls
+sceneControls
   .addColor(params, "ambientLightColor")
   .name("Ambient lighting")
   .onChange(() => {
     ambientLight.color.set(params.ambientLightColor);
   });
-lightControls
+sceneControls
   .add(params, "ambientLightIntensity", 0.0, 5.0)
   .name("Ambient light intensity")
   .onChange(() => {
     ambientLight.intensity = params.ambientLightIntensity;
+  });
+sceneControls
+  .add(params, "cameraDistance", 30.0, 3000.0)
+  .name("Camera distance")
+  .onChange(() => {
+    camera.position.z = params.cameraDistance;
+    camera.far = Math.max(params.cameraDistance * 3, 3000); // TODO: Less magic numbers
+    camera.updateProjectionMatrix();
+  });
+
+sceneControls
+  .add(params, "fov", 30.0, 150.0)
+  .name("FOV")
+  .onChange(() => {
+    camera.fov = params.fov;
+    camera.updateProjectionMatrix();
   });
 
 const ameControls = gui.addFolder("Ame");
