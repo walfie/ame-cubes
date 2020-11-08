@@ -3,7 +3,7 @@ import * as dat from "dat.gui";
 import spritesheet from "../assets/ame-spritesheet.png";
 import { randomCubeTexture } from "./cubes";
 
-const defaultCubeCount = 100;
+const defaultCubeCount = 150;
 const maxCubeCount = 2048;
 const spriteData = {
   width: 650,
@@ -124,7 +124,7 @@ class Cube {
     this.mesh.scale.z = scale;
     this.mesh.material = randomCubeTexture();
 
-    const max = 3000;
+    const max = 2000;
     const [edgeAxis, otherAxis] = choice(["x", "y"], ["y", "x"]);
 
     const isMinEdge = choice(true, false);
@@ -134,8 +134,8 @@ class Cube {
     this.mesh.position.z = -Math.random() * 1000;
 
     this.velocity.z = Math.random() - 0.5;
-    this.velocity[edgeAxis] = Math.random() * 50 * (isMinEdge ? 1 : -1);
-    this.velocity[otherAxis] = (Math.random() - 0.5) * 100;
+    this.velocity[edgeAxis] = Math.random() * 25 * (isMinEdge ? 1 : -1);
+    this.velocity[otherAxis] = (Math.random() - 0.5) * 50;
   }
 
   update() {
@@ -182,7 +182,7 @@ const params = {
   backgroundColor: "#000000",
   lightColor: "#ffffff",
   lightIntensity: 1.0,
-  ambientLightColor: "#ffffff",
+  ambientLightColor: "#001fff",
   ambientLightIntensity: 1.0,
   cubeCount: defaultCubeCount,
   ameVisible: true,
@@ -196,6 +196,7 @@ const ambientLight = new THREE.PointLight(params.ambientLightColor, 1.0, 0);
 scene.add(ambientLight);
 
 const gui = new dat.GUI();
+gui.close();
 const sceneControls = gui.addFolder("Scene");
 sceneControls.open();
 sceneControls
@@ -237,13 +238,13 @@ lightControls
   .addColor(params, "ambientLightColor")
   .name("Ambient lighting")
   .onChange(() => {
-    light.color.set(params.ambientLightColor);
+    ambientLight.color.set(params.ambientLightColor);
   });
 lightControls
   .add(params, "ambientLightIntensity", 0.0, 5.0)
   .name("Ambient light intensity")
   .onChange(() => {
-    light.intensity = params.ambientLightIntensity;
+    ambientLight.intensity = params.ambientLightIntensity;
   });
 
 const ameControls = gui.addFolder("Ame");
@@ -270,12 +271,6 @@ ameControls
     sprite.mesh.visible = params.ameVisible;
   });
 
-let state = {};
-
-const init = () => {};
-
-const render = () => {};
-
 const animate = () => {
   requestAnimationFrame(animate);
   const delta = clock.getDelta();
@@ -286,5 +281,4 @@ const animate = () => {
   renderer.render(scene, camera);
 };
 
-init();
 animate();
